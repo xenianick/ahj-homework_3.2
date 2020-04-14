@@ -44,7 +44,7 @@ body {
   color: #b22222;
 }
 
-:global(.checker-box) {
+:global(.checker) {
   width: 30px;
   height: 30px;
   border: 1px solid #3d729e;
@@ -53,7 +53,7 @@ body {
   cursor: pointer;
 }
 
-:global(.checker-box.checked) {
+:global(.checker.checked) {
   font-size: 26px;
   color: #3d729e;
   text-align: center;

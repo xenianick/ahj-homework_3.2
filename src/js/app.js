@@ -1,38 +1,47 @@
-import Task from './Task.js';
+import createTask from './createTask.js';
+import changeTaskState from './changeTaskState.js';
+import getNotPinnedTasks from './getNotPinnedTasks.js';
+import showNotPinnedTask from './showNotPinnedTask.js';
+import clearInput from './clearInput.js';
 
 const bodyEl = document.querySelector('body');
 
+// создание контейнера для всех элементов на странице
 const taskManagerContainer = document.createElement('div');
 taskManagerContainer.classList.add('task-manager_container');
 
+// создание хэдера TOP Tasks
 const header = document.createElement('div');
 header.classList.add('header');
 header.innerHTML = '<div class="header_main"><p><span class="uppercase_text">Top</span> Tasks</p></div>';
 
+// создание формы и поля ввода
 const taskForm = document.createElement('form');
 taskForm.classList.add('input_form');
-
 const inputField = document.createElement('input');
 inputField.classList.add('input_field');
 inputField.required = true;
 
+// создание контейнера для закрепленных задач
 const pinnedTasksContainer = document.createElement('div');
 pinnedTasksContainer.classList.add('pinned-tasks_container');
 pinnedTasksContainer.innerHTML = '<div class="header_pinned"><p>Pinned:</p></div>';
-
 const noPinnedTasksDummy = document.createElement('div');
+// заглушка при отсутвии задач в Pinned Tasks
 noPinnedTasksDummy.classList.add('no-pinned-tasks');
 noPinnedTasksDummy.innerHTML = '<p><span class="uppercase_text red_text">No pinned tasks</span></p>';
 
+// создание контейнера для всех задач
 const allTasksContainer = document.createElement('div');
 allTasksContainer.classList.add('all-tasks_container');
 allTasksContainer.innerHTML = '<div class="header_all-tasks"><p>All Tasks:</p></div>';
-
 const noTasksDummy = document.createElement('div');
+// заглушка при отсутвии задач в All Tasks
 noTasksDummy.classList.add('no-tasks');
 noTasksDummy.classList.add('hide');
 noTasksDummy.innerHTML = '<p><span class="uppercase_text red_text">No tasks found</span></p>';
 
+// добавление всех созданных элементов на страницу
 taskForm.appendChild(inputField);
 header.appendChild(taskForm);
 pinnedTasksContainer.appendChild(noPinnedTasksDummy);
@@ -42,65 +51,45 @@ taskManagerContainer.appendChild(pinnedTasksContainer);
 taskManagerContainer.appendChild(allTasksContainer);
 bodyEl.appendChild(taskManagerContainer);
 
+// массив для созданных задач
 const taskArray = [];
 
+// вызов по нажатию Enter и непустому полю input
 inputField.addEventListener('keydown', (event) => {
   if (event.keyCode === 13 && inputField.value !== '') {
-    const task = new Task(inputField.value);
-    const taskEl = task.element;
-    taskArray.push(task);
-    allTasksContainer.appendChild(taskEl);
-    const checkerBox = taskEl.querySelector('.checker-box');
-    checkerBox.addEventListener('click', () => {
-      if (!noPinnedTasksDummy.classList.contains('hide')) {
-        noPinnedTasksDummy.classList.add('hide');
-      }
-      if (checkerBox.classList.contains('checked')) {
-        task.isChecked = false;
-        checkerBox.innerHTML = '';
-        allTasksContainer.appendChild(taskEl);
-        if (!pinnedTasksContainer.lastChild.classList.contains('task')) {
-          noPinnedTasksDummy.classList.remove('hide');
-        }
-        if (!noTasksDummy.classList.contains('hide')) {
-          noTasksDummy.classList.add('hide');
-        }
-      } else {
-        task.isChecked = true;
-        checkerBox.innerHTML = '&#10022;';
-        pinnedTasksContainer.appendChild(taskEl);
-        const notPinnedTasks = taskArray.filter((item) => item.isChecked === false);
-        if (notPinnedTasks.every((item) => item.element.classList.contains('hide'))) {
-          noTasksDummy.classList.remove('hide');
-        }
-      }
-      checkerBox.classList.toggle('checked');
-    });
-    const notPinnedTasks = taskArray.filter((item) => item.isChecked === false);
-    notPinnedTasks.forEach((item) => item.element.classList.remove('hide'));
-    noTasksDummy.classList.add('hide');
-    inputField.value = '';
-    inputField.blur();
+    // создание задачи
+    const task = createTask(inputField.value, taskArray, allTasksContainer);
+    const checker = task.element.querySelector('.checker');
+    // навешивание слушателя клика на чекбокс
+    checker.addEventListener('click', () => changeTaskState(task, checker, taskArray, allTasksContainer, pinnedTasksContainer));
+    // отображение незакрепленных задач
+    const notPinnedTasks = getNotPinnedTasks(taskArray);
+    notPinnedTasks.forEach((item) => showNotPinnedTask(item, noTasksDummy));
+    // очистка поля input
+    clearInput(inputField);
   }
 });
 
+// вызов по любому изменению в поле input
 inputField.addEventListener('input', () => {
-  const notPinnedTasks = taskArray.filter((item) => item.isChecked === false);
+  const notPinnedTasks = getNotPinnedTasks(taskArray);
+  // приведение input.value и имя задачи к lower case для сверки
   const inputLowerCase = inputField.value.toLowerCase();
   if (notPinnedTasks.length !== 0) {
     notPinnedTasks.forEach((item) => {
       const taskNameLowerCase = item.name.toLowerCase();
+      // показ всех незакрепленных задач при пустом поле input
       if (inputField.value === '') {
-        item.element.classList.remove('hide');
-        noTasksDummy.classList.add('hide');
+        showNotPinnedTask(item, noTasksDummy);
       }
+      // скрытие задач, у которых нет совпадения с input.value, и показ тех, у которых есть
       if (!taskNameLowerCase.includes(inputLowerCase)) {
         item.element.classList.add('hide');
       } else {
-        item.element.classList.remove('hide');
-        noTasksDummy.classList.add('hide');
+        showNotPinnedTask(item, noTasksDummy);
       }
     });
+    // скрытие заглушки для All Tasks
     if (notPinnedTasks.every((item) => item.element.classList.contains('hide'))) {
       noTasksDummy.classList.remove('hide');
     }

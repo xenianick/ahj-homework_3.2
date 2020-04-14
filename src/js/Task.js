@@ -5,6 +5,6 @@ export default class Task {
     this.isHidden = false;
     this.element = document.createElement('div');
     this.element.className = 'task';
-    this.element.innerHTML = `<div class="task_name"><p>${this.name}</p></div><div class="checker-box"></div>`;
+    this.element.innerHTML = `<div class="task_name"><p>${this.name}</p></div><div class="checker"></div>`;
   }
 }
